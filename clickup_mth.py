@@ -126,7 +126,8 @@ async def update_clickup_doc(doc_id: str):
 @app.post("/register_webhook")
 async def register_webhook():
     """Registers a webhook with ClickUp to detect document updates."""
-    webhook_url = "https://api.clickup.com/api/v2/team/YOUR_TEAM_ID/webhook"
+    YOUR_TEAM_ID = "9016542535"  # Replace with your team ID
+    webhook_url = f"https://api.clickup.com/api/v2/team/{YOUR_TEAM_ID}/webhook"
     headers = {"Authorization": ACCESS_TOKEN, "Content-Type": "application/json"}
 
     data = {
