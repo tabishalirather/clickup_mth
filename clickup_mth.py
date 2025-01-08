@@ -6,7 +6,7 @@ app = FastAPI()
 # ✅ Define ClickUp OAuth credentials
 CLICKUP_CLIENT_ID = "YXY2BXLJR2N64YRRB5I4DRFVNUY16OX3"
 CLICKUP_CLIENT_SECRET = "AH3ERQEO94BNDX8OGYKQ48LHZJOH0V5JXK9UDHE7VAJ6I3RQA1LOSJ7V0VV94VW4"
-CLICKUP_REDIRECT_URI = "http://localhost:8000/callback"
+CLICKUP_REDIRECT_URI = "https://clickup-mth.onrender.com/callback"
 
 # ✅ Temporary storage for access token (Replace with a database in production)
 # ACCESS_TOKEN = None
