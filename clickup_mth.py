@@ -62,21 +62,37 @@ async def clickup_callback(request: Request):
 
     return {"message": "OAuth successful!", "access_token": ACCESS_TOKEN}
 
+
 @app.get("/get_doc/{doc_id}")
 async def get_clickup_doc(doc_id: str):
-    """Fetches the content of a ClickUp doc."""
+    """Fetches the content of a ClickUp doc using the correct API endpoint."""
     if not ACCESS_TOKEN:
         raise HTTPException(status_code=401, detail="Access token not found. Authenticate first.")
 
-    doc_url = f"https://api.clickup.com/api/v2/doc/{doc_id}"
-    headers = {"Authorization": ACCESS_TOKEN}
+    workspace_id = "9016542535"  # Your actual workspace ID
+    doc_url = f"https://api.clickup.com/api/v3/workspaces/{workspace_id}/docs/{doc_id}"
+
+    headers = {
+        "Authorization": ACCESS_TOKEN,
+        "Accept": "application/json"
+    }
 
     response = requests.get(doc_url, headers=headers)
 
+    # ✅ Debugging: Print response for testing
+    print("🔹 Requesting:", doc_url)
+    print("🔹 Response Code:", response.status_code)
+    print("🔹 Response Body:", response.text)
+
     if response.status_code != 200:
-        return {"error": "Failed to retrieve ClickUp doc", "details": response.json()}
+        return {
+            "error": "Failed to retrieve ClickUp doc",
+            "status": response.status_code,
+            "details": response.json()
+        }
 
     return response.json()
+
 
 def find_latex_expressions(text):
     """Finds LaTeX expressions enclosed in $...$ or \[...\]"""
@@ -145,15 +161,22 @@ async def register_webhook():
 
 @app.post("/clickup_webhook")
 async def clickup_webhook(request: Request):
-    """Handles webhook events from ClickUp when a doc is modified."""
+    """Handles webhook events from ClickUp when a doc or task is updated."""
     payload = await request.json()
+    print("🔹 Received Webhook:", json.dumps(payload, indent=4))  # Log incoming payload
 
-    if "event" not in payload or payload["event"] != "documentUpdated":
-        return {"message": "Ignored event"}
+    # Allow both document and task updates
+    if "event" not in payload or payload["event"] not in ["documentUpdated", "taskUpdated"]:
+        return {"message": "Yeah naah mate"}
 
+    task_id = payload.get("task_id")
     doc_id = payload.get("document_id")
 
-    if not doc_id:
-        return {"error": "No document ID found in payload"}
+    if task_id:
+        print(f"🔹 Task Updated: {task_id}, Changes: {payload.get('changes')}")
+        return {"message": "Task update received", "task_id": task_id, "changes": payload.get("changes")}
 
-    return await update_clickup_doc(doc_id)
+    if doc_id:
+        return await update_clickup_doc(doc_id)
+
+    return {"error": "No task_id or document_id found in payload"}
